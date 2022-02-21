@@ -1,8 +1,15 @@
 import tkinter as tk
 import tkinter.ttk as ttk
-
 from enigma_machine import EnigmaMachine
 
+# This is a tkinter-based GUI for Enigma Machine. 
+# TODO: take care of Comm Settings frame problems, 
+# resizing window when buttons are added
+# limit amount of symbols that can be inputted into the Entry
+# make an .exe file?
+
+# TODO: add socket support?
+# TODO: !add functionality for mode arguments
 
 class MainApp(tk.Frame, EnigmaMachine):
     """this is Enigma Machine GUI
@@ -32,16 +39,21 @@ class MainApp(tk.Frame, EnigmaMachine):
         
         Sections:
             MainFrame: all configs related to the parent window
-            Translator board: top part of the frame where input-output windows are
+            Translator board: top part of the frame where input-output 
+                windows are
             Direct IO: part related to unencrypted text IO
             Encrypted IO: part related to encrypted text IO
-            Buttonboard: middle section between Direct IO and Encrypted IO, contains encrypt-decrypt buttons
-            Baseboard: bottom portion of the window, that contains 'reset', 'comm settings' buttons, rotor set
+            Buttonboard: middle section between Direct IO and 
+                Encrypted IO, contains encrypt-decrypt buttons
+            Baseboard: bottom portion of the window, that contains 
+                'reset', 'comm settings' buttons, rotor set
                 and rotor position controls.
             Commutator: commutator button
             Reset: reset button
-            Rotor Position Wheels: three windows allowing to set up rotor positions
-            Rotors Selected: dropdown menu allowing to pick certain rotor numbers
+            Rotor Position Wheels: three windows allowing to set up rotor
+                positions
+            Rotors Selected: dropdown menu allowing to pick certain rotor
+                numbers
         """
         self.master.geometry('800x500')  # size of the window upon opening
         self.master.title('Enigma Machine v1.0')
@@ -249,7 +261,8 @@ class MainApp(tk.Frame, EnigmaMachine):
 
     def openCommSettings(self):
         """
-        This is child window that opens after 'Comm Settings' button press
+        This is child window that opens after 'Comm Settings' 
+        button press
         
         """
         # Window settings
@@ -296,7 +309,8 @@ class MainApp(tk.Frame, EnigmaMachine):
 
     # CREATES BUTTONS ON THE FORM
     def button_creator(self):
-        #Deleting all existing buttons, to check if there any that are deleted:
+        #Deleting all existing buttons, 
+        # to check if there any that are deleted:
         for widget in self.comm_window.winfo_children()[1:]:
             widget.destroy()
 
