@@ -2,14 +2,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from enigma_machine import EnigmaMachine
 
-# This is a tkinter-based GUI for Enigma Machine. 
-# TODO: take care of Comm Settings frame problems, 
-# resizing window when buttons are added
-# limit amount of symbols that can be inputted into the Entry
-# make an .exe file?
+# This is a tkinter-based GUI for Enigma Machine.
 
-# TODO: add socket support?
-# TODO: !add functionality for mode arguments
 
 class MainApp(tk.Frame, EnigmaMachine):
     """this is Enigma Machine GUI
@@ -17,14 +11,14 @@ class MainApp(tk.Frame, EnigmaMachine):
 
     def __init__(self, *args, **kwargs):
         """init main window
-        
+
         Attributes:
             button_list (list): list of commutator (plugboard) buttons 
                 that will remain in a commutator window
             button_list_updated (list): list of updated commutator 
                 buttons that will be added to the rest in the window.
             style = instance of ttk.Style() 
-        
+
         """
         tk.Frame.__init__(self, *args, **kwargs)
         EnigmaMachine.__init__(self, *args, **kwargs)
@@ -36,7 +30,7 @@ class MainApp(tk.Frame, EnigmaMachine):
     def initUI(self):
         """
         Building the parent window
-        
+
         Sections:
             MainFrame: all configs related to the parent window
             Translator board: top part of the frame where input-output 
@@ -57,19 +51,19 @@ class MainApp(tk.Frame, EnigmaMachine):
         """
         self.master.geometry('800x500')  # size of the window upon opening
         self.master.title('Enigma Machine v1.0')
-        self.master.minsize(500, 200)
+        self.master.minsize(750, 200)
         self.master.grid_propagate(
             'False')  # Slaves do not determine the size of the master widget
         self.pack(fill='both', expand=True)
 
-        #MainFrame
+        # MainFrame
         self.mainFrame = tk.Frame(self)
         self.mainFrame.pack(fill='both', expand=1)
 
         self.mainFrame.rowconfigure(0, weight=3)
         self.mainFrame.columnconfigure(0, weight=1)
 
-        #Translator board
+        # Translator board
         self.translator_board = tk.Frame(self.mainFrame)
         self.translator_board.grid(column=0, row=0, sticky='nsew')
 
@@ -77,7 +71,7 @@ class MainApp(tk.Frame, EnigmaMachine):
         self.translator_board.rowconfigure(2, weight=1)
         self.translator_board.columnconfigure(2, weight=1)
 
-        #Direct IO
+        # Direct IO
         self.direct_label = tk.LabelFrame(self.translator_board,
                                           text='Direct',
                                           padx=5,
@@ -99,7 +93,7 @@ class MainApp(tk.Frame, EnigmaMachine):
         direct_scroller.grid(column=1, row=0, sticky='NSE')
         self.direct_input['yscrollcommand'] = direct_scroller.set
 
-        #Encrypted IO
+        # Encrypted IO
         self.encrypted_label = tk.LabelFrame(self.translator_board,
                                              text='Encrypted',
                                              padx=5,
@@ -125,7 +119,7 @@ class MainApp(tk.Frame, EnigmaMachine):
         encrypted_scroller.grid(column=1, row=0, sticky='NSE')
         self.encrypted_input['yscrollcommand'] = encrypted_scroller.set
 
-        #ButtonBoard
+        # ButtonBoard
         button_board = tk.Frame(self.translator_board, width=80, height=100)
         button_board.grid(column=1, row=2)
 
@@ -137,30 +131,39 @@ class MainApp(tk.Frame, EnigmaMachine):
         self.decode.config(command=lambda: self.onDecode())
         self.decode.place(relx=0.5, rely=0.70, anchor='center')
 
-        #Baseboard
+        # Baseboard
         baseboard = tk.Frame(self.mainFrame, height=50, pady=5, padx=5)
         baseboard.grid(column=0, row=1, sticky='ew')
 
         baseboard.columnconfigure(0, weight=1)
         baseboard.columnconfigure(1, weight=1)
-        baseboard.columnconfigure(2, weight=3)
+        baseboard.columnconfigure(2, weight=1)
         baseboard.rowconfigure(0, weight=1)
 
         left_button_box = tk.Frame(baseboard)
         left_button_box.grid(column=0, row=0, sticky='W')
 
-        #Commutator
+        # Commutator button
         self.comm_button = ttk.Button(left_button_box,
                                       text='Open commutator settings')
         self.comm_button.config(command=lambda: self.openCommSettings())
         self.comm_button.grid(column=1, row=0, sticky='e')
 
-        #Reset
+        # Reset button
         self.reset_button = ttk.Button(left_button_box, text='Reset')
         self.reset_button.config(command=lambda: self.onReset())
         self.reset_button.grid(column=0, row=0, sticky='w')
 
-        #Rotor Position Wheels
+        # Mode selector
+        self.mode_selector_frame = tk.LabelFrame(
+            baseboard, height=50, width=50, text='Mode', padx=5, pady=5)
+        self.mode_selector_frame.grid(column=2, row=0, sticky='w')
+        self.mode_selector = ttk.Entry(self.mode_selector_frame, width=2)
+        self.mode_selector.pack(fill='both')
+
+        self.mode_selector.insert(0, self.mode)
+
+        # Rotor Position Wheels
         positioning_frame = tk.LabelFrame(baseboard,
                                           height=50,
                                           width=250,
@@ -194,7 +197,7 @@ class MainApp(tk.Frame, EnigmaMachine):
         self.position_3.set(self.wheel3pos)
         self.position_3.grid(column=2, row=0, sticky='nsew', padx=5, pady=5)
 
-        #Rotors Selected
+        # Rotors Selected
         rotors_frame = tk.LabelFrame(baseboard,
                                      text='Rotors',
                                      width=250,
@@ -227,9 +230,11 @@ class MainApp(tk.Frame, EnigmaMachine):
 
     def onEncode(self):
         self.setWheels()
+        self.mode = int(self.mode_selector.get())
         direct = self.direct_input.get("1.0", tk.END)
         self.encrypted_input.delete("1.0", tk.END)
         self.encrypted_input.insert("1.0", self.encrypt(direct))
+
         self.wheelClick()
 
     def onDecode(self):
@@ -263,44 +268,55 @@ class MainApp(tk.Frame, EnigmaMachine):
         """
         This is child window that opens after 'Comm Settings' 
         button press
-        
+
         """
         # Window settings
         self.comm_window = tk.Toplevel(self.master)
-        self.comm_window.geometry('230x430')
+        self.comm_window.geometry('230x215')
         self.comm_window.title('Commutator Settings')
         self.comm_window.grab_set()
+        self.comm_window.bind('<Return>', lambda event: self.on_add_link())
+
+        # grid layout
+        self.comm_window.columnconfigure(0, weight=1)
+        self.comm_window.columnconfigure(1, weight=1)
 
         # control frame: entry + add_button
         self.control_frame = tk.Frame(self.comm_window, height=30)
-        self.control_frame.pack()
+        self.control_frame.grid(row=0, columnspan=2, column=0, sticky='nsew')
 
         self.couple_var = tk.StringVar()
         self.couple_entry = tk.Entry(
             self.control_frame, width=4, textvariable=self.couple_var
-        )  # TODO: make sure only 2 symbols can be inputted in Entry
+        )
         self.couple_entry.pack(side='left', pady=10, padx=10)
 
         self.add_button = ttk.Button(self.control_frame, text='Add link')
         self.add_button.config(command=lambda: self.on_add_link())
-        self.add_button.pack(side='right', pady=5, padx=10)
+        self.add_button.pack(side='left', pady=5, padx=10,
+                             fill='both', expand=1)
 
         self.button_creator(
-        )  #init exising links as buttons when the comm_board is open:
+        )  # init exising links as buttons when the comm_board is open:
 
     # ADDS COUPLE AND BUTTON
     def on_add_link(self):
-        # adding pair to the self.plugboard
-        self.add_pair(self.couple_entry.get().upper())
-        # creating entry for the button to be initialized
-        self.button_list_updated = []
-        for pair in self.plugboard:
-            self.button_list_updated.append(''.join(list(pair)))
-
-        # callback creator
-        self.button_creator()
+        # Checking the input before adding it:
+        if self.couple_entry.get().upper().isalpha() and len(self.couple_entry.get().upper()) == 2: ##ENG
+            # adding pair to the self.plugboard
+            self.add_pair(self.couple_entry.get().upper())
+            # creating entry for the button to be initialized
+            self.button_list_updated = []
+            for pair in self.plugboard:
+                self.button_list_updated.append(''.join(list(pair)))
+            self.couple_entry.delete(0, tk.END)
+            # callback creator
+            self.button_creator()
+        else:
+            self.couple_entry.delete(0, tk.END)
 
     # DELETION
+
     def on_linkbutton_click(self, letters):
         for letter in letters:
             self.unpair_letter(letter)
@@ -309,20 +325,32 @@ class MainApp(tk.Frame, EnigmaMachine):
 
     # CREATES BUTTONS ON THE FORM
     def button_creator(self):
-        #Deleting all existing buttons, 
+        # Deleting all existing buttons,
         # to check if there any that are deleted:
         for widget in self.comm_window.winfo_children()[1:]:
             widget.destroy()
 
-        #Creating buttons in accordance with self.plugboard:
+        # Creating buttons in accordance with self.plugboard:
+        counter = 0
         for pair in self.plugboard:
+            counter += 1
             couple = ''.join(list(pair))
             self.button_link = ttk.Button(
                 self.comm_window,
                 text=f'{couple}',
-                command=lambda: self.on_linkbutton_click(couple))
-
-            self.button_link.pack()
+                command=lambda x=couple: self.on_linkbutton_click(x))  # deletion function is bound to a text variable of a button.
+            if len(self.plugboard) < 7:
+                # buttons occupy the whole window
+                self.button_link.grid(
+                    row=counter+1, columnspan=2, column=0, sticky='nsew')
+            else:
+                # buttons occupy half and half
+                if counter < 7:
+                    self.button_link.grid(
+                        row=counter+1, column=0, sticky='nsew')
+                else:
+                    self.button_link.grid(
+                        row=counter-5, column=1, sticky='nsew')
 
     # THIS SECTION WAS USED FOR A DIFFERENT UI STYLE
 
@@ -650,5 +678,5 @@ if __name__ == '__main__':
     # Running the app
     root = tk.Tk()
     app = MainApp()
-    #app.style.theme_use('winnative')
+    # app.style.theme_use('winnative')
     root.mainloop()

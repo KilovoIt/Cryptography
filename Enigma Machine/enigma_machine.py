@@ -90,7 +90,7 @@ class EnigmaMachine:
 
     reflector = "EJMZALYXVBWFCRQUONTSPIKHGD"
 
-    def __init__(self, rotor_set="111", position=[0, 0, 0], set_plugboard=[]):
+    def __init__(self, rotor_set="111", position=[0, 0, 0], set_plugboard=[], mode=0):
         """Initializing EnigmaMachine object
 
         Args:
@@ -118,15 +118,18 @@ class EnigmaMachine:
                 couple of letters to be swapped
                 in the end of encryption and decryption. If no 
                 set_plugboard parameter is passed, defaults to [].
-
-
+            mode (int, optional): defines whether to retain the original 
+                word length or chop the message into blocks with n 
+                symbols each. Defaults to 0. when 0, original word length
+                is preserved. Only Encrypt method uses this parameter.
         """
-        super(EnigmaMachine, self).__init__()
+
         self.rotor_set = rotor_set
         self.wheel1pos = position[0]
         self.wheel2pos = position[1]
         self.wheel3pos = position[2]
         self.plugboard = []
+        self.mode = mode
         self.plugboardSetter(set_plugboard)
 
     def positionSetter(self, pos: list = None):
@@ -141,9 +144,9 @@ class EnigmaMachine:
                 plus 2 positions, so 54 % 26 = 2 in this case
         """
         # asserting that input is in valid form
-        assert len(pos) == 3 and all(
-            isinstance(item, int) for item in pos
-        ), "Position format is invalid. Please, enter as [int, int, int]."
+        #assert len(pos) == 3 and all(
+        #    isinstance(item, int) for item in pos
+        #), "Position format is invalid. Please, enter as [int, int, int]."
         if pos != None:
             self.wheel1pos = pos[0] % 26  # overstep protection
             self.wheel2pos = pos[1] % 26
@@ -452,8 +455,7 @@ class EnigmaMachine:
         self,
         message,
         position: list = None,
-        plugboard_values: list = None,
-        mode: int = 0,
+        plugboard_values: list = None
     ) -> str:
         """encrypts message
 
@@ -463,11 +465,6 @@ class EnigmaMachine:
                 postition. Defaults to None.
             plugboard_values (list, optional): at the end, swap these 
                 letters: e.g. ['AB', 'CD', 'EF']. Defaults to None.
-            mode (int, optional): defines whether to retain the original 
-                word length or chop the message into blocks with n 
-                symbols each. Defaults to 0. when 0, original word length
-                is preserved.
-
         Returns:
             str: encrypted message
         """
@@ -478,14 +475,14 @@ class EnigmaMachine:
         self.plugboardSetter(plugboard_values)
         self.positionSetter(position)  # set up rotor position if any
         encrypted = ""
-        if mode == 0:  # ordinal word length procedure
+        if self.mode == 0:  # ordinal word length procedure
             for symbol in message:
                 # decrypts message elementwise
                 encrypted += self.plugboardHandler(
                     self.parser(symbol, self.keyEncryptor))
             return encrypted
         else:
-            ctr = mode  # counter
+            ctr = self.mode  # counter
             for symbol in message:
                 if symbol != " ":  # if symbol is not a space, proceeds
                     ctr -= 1  # counter decreased by 1
@@ -493,7 +490,7 @@ class EnigmaMachine:
                         self.parser(symbol, self.keyEncryptor))
                     if ctr == 0:
                         encrypted += " "  # adds a space to encr. string
-                        ctr = mode  # reset
+                        ctr = self.mode  # reset
                 else:
                     continue  # if symbol is a space, jumps to the next 
             # returns encrypted message
